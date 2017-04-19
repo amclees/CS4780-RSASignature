@@ -2,3 +2,7 @@ bin
 .project
 .settings
 .classpath
+.settings
+*.rsa
+test.*
+*.signed
