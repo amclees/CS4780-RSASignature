@@ -8,8 +8,6 @@ import java.math.BigInteger;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import javafx.application.Platform;
-
 public class Main {
   
   public static void main(String[] args) {
@@ -34,6 +32,7 @@ public class Main {
         break;
       }
     }
+    sc.close();
     System.exit(0);
   }
   

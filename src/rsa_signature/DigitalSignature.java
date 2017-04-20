@@ -85,8 +85,9 @@ public class DigitalSignature {
       System.out.println("Your JVM is broken, MD5 is guaranteed to be an algorithm.");
     }
     
+    ObjectInputStream fileIn = null;
     try {
-      ObjectInputStream fileIn = new ObjectInputStream(new FileInputStream(file));
+      fileIn = new ObjectInputStream(new FileInputStream(file));
       BigInteger encryptedDigest = (BigInteger) fileIn.readObject();
       BigInteger decryptedDigest = encryptedDigest.modPow(privateKey[1], privateKey[0]);
       byte[] digest = decryptedDigest.toByteArray();
@@ -116,6 +117,12 @@ public class DigitalSignature {
       e.printStackTrace();
     } catch(IOException e) {
       if(KeyGen.noisy) System.out.println("Failed to read signed file, or BigInteger portion tampered");
+    } finally {
+      if(fileIn != null) {
+        try {
+          fileIn.close();
+        } catch(IOException e) {}
+      }
     }
     return false;
   }
