@@ -8,12 +8,14 @@ import java.math.BigInteger;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import javafx.application.Platform;
+
 public class Main {
   
   public static void main(String[] args) {
     Scanner sc = new Scanner(System.in);
     while(true) {
-      System.out.printf("Actions:%n  0 - Exit%n  1  \"Send\" files%n  2  \"Receive\" files%n");
+      System.out.printf("Actions:%n  0   Exit%n  1  \"Send\" files%n  2  \"Receive\" files%n");
       int action = sc.nextInt();
       if(action == 1) {
         System.out.println("Enter a filename:");
@@ -26,11 +28,13 @@ public class Main {
           System.out.println("That file is not valid (not a .signed)");
           continue;
         }
-        DigitalSignature.verify(new File(filename), getKeys(true));
+        boolean valid = DigitalSignature.verify(new File(filename), getKeys(true));
+        System.out.printf("The file has %sbeen tampered with.%n", valid ? "not " : "");
       } else {
         break;
       }
     }
+    System.exit(0);
   }
   
   public static BigInteger[] getKeys(boolean privateKey) {

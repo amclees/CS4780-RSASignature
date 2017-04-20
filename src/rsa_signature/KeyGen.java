@@ -30,9 +30,20 @@ public class KeyGen {
     SecureRandom rand = new SecureRandom();
     if (numberOfBits <= 0 || !((numberOfBits & (numberOfBits - 1)) == 0)) throw new IllegalArgumentException();
     int factorLength = numberOfBits / 2;
-    BigInteger p = new BigInteger(factorLength, Integer.MAX_VALUE, rand);
-    BigInteger q = new BigInteger(factorLength, Integer.MAX_VALUE, rand);
-    BigInteger n = p.multiply(q);
+    BigInteger p = null;
+    BigInteger q = null;
+    BigInteger n = null;
+    boolean cont = true;
+    do {
+      p = new BigInteger(factorLength, Integer.MAX_VALUE, rand);
+      q = new BigInteger(factorLength, Integer.MAX_VALUE, rand);
+      n = p.multiply(q);
+      BigInteger nConstraint = BigInteger.TEN.pow(50 * (int)Math.floor(((0.0f + numberOfBits) / 1024)));
+      BigInteger pMinusQ = p.subtract(q).abs();
+      cont = nConstraint.compareTo(pMinusQ) > 0;
+      System.out.println(nConstraint);
+      System.out.println(pMinusQ);
+    } while(cont);
     BigInteger totientN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE)); // == φ(n)
     BigInteger e;
     do {
@@ -40,7 +51,7 @@ public class KeyGen {
     } while ((!totientN.gcd(e).equals(BigInteger.ONE)) || e.equals(BigInteger.ZERO));
     BigInteger d = e.modInverse(totientN);
     if(noisy) {
-      System.out.printf("p: %d%nq: %d%nn: %d%ne: %d%nd: %d%ne * d mod φ(n): %d%ngcd(e, φ(n)): %d%n", p, q, n, e, d, e.multiply(d).mod(totientN), totientN.gcd(e));
+      System.out.printf("p: %d%nq: %d%nn: %d%ne: %d%nd: %d%ne * d mod totient(n): %d%ngcd(e, totient(n)): %d%n", p, q, n, e, d, e.multiply(d).mod(totientN), totientN.gcd(e));
     }
     BigInteger[] keys = { n, e, d };
     return keys;
