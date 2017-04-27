@@ -15,21 +15,36 @@ import java.security.NoSuchAlgorithmException;
 public class DigitalSignature {
   public static final int bufferSize = 1024;
   
-  public static void writeSigned(File file, BigInteger[] publicKey) {
-    if(!file.isFile()) throw new IllegalArgumentException();
+  private DigitalSignature() {}
+  
+  public static void writeSigned(File file, BigInteger[] privateKey) {
+    if (!file.isFile()) {
+      throw new IllegalArgumentException();
+    }
     File signedFile = null;
     try {
       signedFile = new File(file.getCanonicalPath() + ".signed");
-      signedFile.createNewFile();
-    } catch(IOException e) {
-      if(KeyGen.noisy) System.out.println("Failed to make signed file path");
+      boolean madeFile = false; 
+      if (!signedFile.exists()) {
+        signedFile.createNewFile();
+      } else {
+        madeFile = true;
+      }
+      if (!madeFile) {
+        throw new IOException();
+      }
+    } catch (IOException e) {
+      if (KeyGen.noisy) {
+        System.out.println("Failed to make signed file path");
+      }
+      return;
     }
     
     MessageDigest messageDigest = null;
     try {
       messageDigest = MessageDigest.getInstance("MD5");
     } catch (NoSuchAlgorithmException e) {
-      System.out.println("Your JVM is broken, MD5 is guaranteed to be an algorithm.");
+      e.printStackTrace();
     }
     
     try {
@@ -42,7 +57,9 @@ public class DigitalSignature {
       }
       fileInput.close();
     } catch(IOException e) {
-      if(KeyGen.noisy) System.out.println("Failed to get file bytes");
+      if (KeyGen.noisy) {
+        System.out.println("Failed to get file bytes");
+      }
     }
     
     byte[] digestBytes = messageDigest.digest();
@@ -53,7 +70,7 @@ public class DigitalSignature {
       printArray(digest.toByteArray());
     }
     
-    BigInteger signature = digest.modPow(publicKey[1], publicKey[0]);
+    BigInteger signature = digest.modPow(privateKey[1], privateKey[0]);
     
     try {
       ObjectOutputStream signedFileOut = new ObjectOutputStream(new FileOutputStream(signedFile));
@@ -71,24 +88,28 @@ public class DigitalSignature {
       
       
       signedFileOut.close();
-    } catch(IOException e) {
-      if(KeyGen.noisy) System.out.println("Failed to write signed file");
+    } catch (IOException e) {
+      if (KeyGen.noisy) {
+        System.out.println("Failed to write signed file");
+      }
     }
   }
   
-  public static boolean verify(File file, BigInteger[] privateKey) {
-    if(!file.isFile()) throw new IllegalArgumentException();
+  public static boolean verify(File file, BigInteger[] publicKey) {
+    if (!file.isFile()) {
+      throw new IllegalArgumentException();
+    }
     MessageDigest messageDigest = null;
     try {
       messageDigest = MessageDigest.getInstance("MD5");
     } catch (NoSuchAlgorithmException e) {
-      System.out.println("Your JVM is broken, MD5 is guaranteed to be an algorithm.");
+      e.printStackTrace();
     }
     
     try {
       ObjectInputStream fileIn = new ObjectInputStream(new FileInputStream(file));
       BigInteger encryptedDigest = (BigInteger) fileIn.readObject();
-      BigInteger decryptedDigest = encryptedDigest.modPow(privateKey[1], privateKey[0]);
+      BigInteger decryptedDigest = encryptedDigest.modPow(publicKey[1], publicKey[0]);
       byte[] digest = decryptedDigest.toByteArray();
       
       for (int got = 1; got > 0;) {
@@ -104,31 +125,36 @@ public class DigitalSignature {
       // Interchanging between 2's complement and signum results in a padded 0 bytes at the front of negative starting digests, this accounts for that
       calculatedDigest = (new BigInteger(1, calculatedDigest)).toByteArray(); 
       
-      if(KeyGen.noisy) {
+      if (KeyGen.noisy) {
         System.out.println("Digests:");
         printArray(digest);
         printArray(calculatedDigest);
       }
       return checkDigest(digest, calculatedDigest);
-    } catch(ClassCastException e) {
+    } catch (ClassCastException e) {
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
-    } catch(IOException e) {
-      if(KeyGen.noisy) System.out.println("Failed to read signed file, or BigInteger portion tampered");
+    } catch (IOException e) {
+      if (KeyGen.noisy) {
+        System.out.println("Failed to read signed file, or BigInteger portion tampered");
+      }
     }
     return false;
   }
   
   public static void printArray(byte[] input){
-    for(int i = 0; i < input.length; i++)
+    for (int i = 0; i < input.length; i++) {
       System.out.print(input[i] + " ");
+    }
     System.out.println();
   }
   
   private static boolean checkDigest(byte[] b1, byte[] b2) {
-    if(b1.length != b2.length) return false;
-    for(int i = 0; i < b1.length; i++) {
+    if (b1.length != b2.length) {
+      return false;
+    }
+    for (int i = 0; i < b1.length; i++) {
       if(b1[i] != b2[i]) return false;
     }
     return true;

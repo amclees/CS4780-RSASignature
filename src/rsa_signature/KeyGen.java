@@ -11,6 +11,8 @@ import java.security.SecureRandom;
 public class KeyGen {
   public static final boolean noisy = true;
   
+  private KeyGen() {}
+  
   public static void main(String[] args) {
     BigInteger[] keys = getKeys();
     writeKeys(keys);
@@ -28,13 +30,15 @@ public class KeyGen {
    */
   public static BigInteger[] getKeys(int numberOfBits) {
     SecureRandom rand = new SecureRandom();
-    if (numberOfBits <= 0 || !((numberOfBits & (numberOfBits - 1)) == 0)) throw new IllegalArgumentException();
+    if (numberOfBits <= 0 || !((numberOfBits & (numberOfBits - 1)) == 0)) {
+      throw new IllegalArgumentException();
+    }
     int factorLength = numberOfBits / 2;
     BigInteger p = null;
     BigInteger q = null;
     BigInteger n = null;
     boolean cont = true;
-    do {
+    while (cont) {
       p = new BigInteger(factorLength, Integer.MAX_VALUE, rand);
       q = new BigInteger(factorLength, Integer.MAX_VALUE, rand);
       n = p.multiply(q);
@@ -43,18 +47,17 @@ public class KeyGen {
       cont = nConstraint.compareTo(pMinusQ) > 0;
       System.out.println(nConstraint);
       System.out.println(pMinusQ);
-    } while(cont);
-    BigInteger totientN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE)); // == φ(n)
+    }
+    BigInteger totientN = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE)); // == totient(n)
     BigInteger e;
     do {
       e = new BigInteger(numberOfBits, rand);
     } while ((!totientN.gcd(e).equals(BigInteger.ONE)) || e.equals(BigInteger.ZERO));
     BigInteger d = e.modInverse(totientN);
-    if(noisy) {
+    if (noisy) {
       System.out.printf("p: %d%nq: %d%nn: %d%ne: %d%nd: %d%ne * d mod totient(n): %d%ngcd(e, totient(n)): %d%n", p, q, n, e, d, e.multiply(d).mod(totientN), totientN.gcd(e));
     }
-    BigInteger[] keys = { n, e, d };
-    return keys;
+    return new BigInteger[] { n, e, d };
   }
   
   /**
@@ -74,21 +77,29 @@ public class KeyGen {
       privateKeyOut.writeObject(keys[0]);
       publicKeyOut.writeObject(keys[1]);
       privateKeyOut.writeObject(keys[2]);
-      if(noisy) System.out.println("Wrote keys");
-    } catch(IOException e) {
-      if(noisy) System.out.println("Failed to write keys");
-    } catch(Exception e) {
+      if(noisy) {
+        System.out.println("Wrote keys");
+      }
+    } catch (IOException e) {
+      if(noisy) {
+        System.out.println("Failed to write keys");
+      }
+    } catch (Exception e) {
       throw e;
     } finally {
-      if(publicKeyOut != null) {
+      if (publicKeyOut != null) {
         try {
           publicKeyOut.close();
-        } catch(IOException e) {}
+        } catch (IOException e) {
+          // If this failed, the stream is already closed.
+        }
       }
-      if(privateKeyOut != null) {
+      if (privateKeyOut != null) {
         try {
           privateKeyOut.close();
-        } catch(IOException e) {}
+        } catch (IOException e) {
+          // If this failed, the stream is already closed.
+        }
       }
     }
   }
