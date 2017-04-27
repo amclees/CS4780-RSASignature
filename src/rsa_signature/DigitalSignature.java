@@ -106,8 +106,9 @@ public class DigitalSignature {
       e.printStackTrace();
     }
     
+    ObjectInputStream fileIn = null;
     try {
-      ObjectInputStream fileIn = new ObjectInputStream(new FileInputStream(file));
+      fileIn = new ObjectInputStream(new FileInputStream(file));
       BigInteger encryptedDigest = (BigInteger) fileIn.readObject();
       BigInteger decryptedDigest = encryptedDigest.modPow(publicKey[1], publicKey[0]);
       byte[] digest = decryptedDigest.toByteArray();
@@ -138,6 +139,14 @@ public class DigitalSignature {
     } catch (IOException e) {
       if (KeyGen.noisy) {
         System.out.println("Failed to read signed file, or BigInteger portion tampered");
+      }
+    } finally {
+      if (fileIn != null) {
+        try {
+          fileIn.close();
+        } catch (IOException e) {
+          // File already closed or not opened
+        }
       }
     }
     return false;

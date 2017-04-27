@@ -8,8 +8,6 @@ import java.math.BigInteger;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import javafx.application.Platform;
-
 public class Main {
   
   private Main() {}
@@ -37,6 +35,7 @@ public class Main {
       }
     }
     // Fixes failure to cede resources after exit
+    sc.close();
     System.exit(0);
   }
   
