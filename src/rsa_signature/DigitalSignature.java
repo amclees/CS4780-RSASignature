@@ -27,6 +27,7 @@ public class DigitalSignature {
       boolean madeFile = false; 
       if (!signedFile.exists()) {
         signedFile.createNewFile();
+        madeFile = true;
       } else {
         madeFile = true;
       }

@@ -16,7 +16,13 @@ public class Main {
     Scanner sc = new Scanner(System.in);
     while (true) {
       System.out.printf("Actions:%n  0   Exit%n  1  \"Send\" files%n  2  \"Receive\" files%n");
-      int action = sc.nextInt();
+      int action = 0;
+      String actionCapture = sc.next();
+      while(!actionCapture.matches("\\d+")) {
+    	  System.out.println("Numbers only plz cause nextInt throws errors.");
+    	  actionCapture = sc.next();
+      } 
+      action = Integer.parseInt(actionCapture);
       if (action == 1) {
         System.out.println("Enter a filename:");
         String filename = sc.next();
